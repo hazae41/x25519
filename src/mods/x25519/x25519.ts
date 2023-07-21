@@ -1,21 +1,30 @@
+import { Result } from "@hazae41/result"
+import { CryptoError } from "libs/crypto/crypto.js"
+import { Promiseable } from "libs/promises/promiseable.js"
+
 export interface PublicKey {
-  to_bytes(): Uint8Array
+  tryExport(): Promiseable<Result<Uint8Array, CryptoError>>
 }
 
 export interface SharedSecret {
-  to_bytes(): Uint8Array
+  tryExport(): Promiseable<Result<Uint8Array, CryptoError>>
 }
 
 export interface StaticSecret {
-  to_public(): PublicKey
-  diffie_hellman(public_key: PublicKey): SharedSecret
+  tryGetPublicKey(): Promiseable<Result<PublicKey, CryptoError>>
+  tryComputeDiffieHellman(public_key: PublicKey): Promiseable<Result<SharedSecret, CryptoError>>
 }
 
-export type StaticSecretClass = new () => StaticSecret
-export type PublicKeyClass = new (bytes: Uint8Array) => PublicKey
+export interface StaticSecretFactory {
+  tryCreate(): Promiseable<Result<StaticSecret, CryptoError>>
+}
+
+export interface PublicKeyFactory {
+  tryImport(bytes: Uint8Array): Promiseable<Result<PublicKey, CryptoError>>
+}
 
 export interface Adapter {
-  StaticSecret: StaticSecretClass
-  PublicKey: PublicKeyClass
+  StaticSecret: StaticSecretFactory
+  PublicKey: PublicKeyFactory
 }
 
