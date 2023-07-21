@@ -3,7 +3,7 @@ import { tryCrypto } from "libs/crypto/crypto.js";
 import { Adapter } from "./x25519.js";
 
 export async function isSafeSupported() {
-  return await tryCrypto(() => crypto.subtle.generateKey("X25519", false, [])).then(r => r.isOk())
+  return await tryCrypto(() => crypto.subtle.generateKey("X25519", false, ["deriveKey", "deriveBits"])).then(r => r.isOk())
 }
 
 export function fromSafe(): Adapter {
