@@ -6,6 +6,8 @@ import { Adapter } from "./x25519.js"
 export async function fromSafeOrBerith(berith: typeof Berith) {
   if (await isSafeSupported())
     return fromSafe()
+
+  await berith.initBundledOnce()
   return fromBerith(berith)
 }
 
