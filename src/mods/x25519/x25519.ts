@@ -64,6 +64,10 @@ export interface PublicKey extends Disposable {
   tryExport(): Promiseable<Result<Copiable, CryptoError>>
 }
 
+export interface SharedSecret extends Disposable {
+  tryExport(): Promiseable<Result<Copiable, CryptoError>>
+}
+
 export interface PrivateKeyFactory {
   tryRandom(): Promiseable<Result<PrivateKey, CryptoError>>
   tryImport(bytes: Uint8Array): Promiseable<Result<PrivateKey, CryptoError>>
@@ -71,10 +75,6 @@ export interface PrivateKeyFactory {
 
 export interface PublicKeyFactory {
   tryImport(bytes: Uint8Array): Promiseable<Result<PublicKey, CryptoError>>
-}
-
-export interface SharedSecret extends Disposable {
-  tryExport(): Promiseable<Result<Copiable, CryptoError>>
 }
 
 export interface Adapter {
