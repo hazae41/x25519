@@ -13,11 +13,51 @@ export async function fromSafeOrBerith(berith: typeof Berith) {
 
 export function fromBerith(berith: typeof Berith): Adapter {
 
+  class PrivateKey {
+
+    constructor(
+      readonly inner: Berith.X25519StaticSecret
+    ) { }
+
+    [Symbol.dispose]() {
+      this.inner.free()
+    }
+
+    static new(inner: Berith.X25519StaticSecret) {
+      return new PrivateKey(inner)
+    }
+
+    static tryRandom() {
+      return tryCryptoSync(() => new berith.X25519StaticSecret()).mapSync(PrivateKey.new)
+    }
+
+    static tryImport(bytes: Uint8Array) {
+      return tryCryptoSync(() => berith.X25519StaticSecret.from_bytes(bytes)).mapSync(PrivateKey.new)
+    }
+
+    tryGetPublicKey() {
+      return tryCryptoSync(() => this.inner.to_public()).mapSync(PublicKey.new)
+    }
+
+    tryCompute(other: PublicKey) {
+      return tryCryptoSync(() => this.inner.diffie_hellman(other.inner)).mapSync(SharedSecret.new)
+    }
+
+    tryExport() {
+      return tryCryptoSync(() => this.inner.to_bytes())
+    }
+
+  }
+
   class PublicKey {
 
     constructor(
       readonly inner: Berith.X25519PublicKey
     ) { }
+
+    [Symbol.dispose]() {
+      this.inner.free()
+    }
 
     static new(inner: Berith.X25519PublicKey) {
       return new PublicKey(inner)
@@ -39,6 +79,10 @@ export function fromBerith(berith: typeof Berith): Adapter {
       readonly inner: Berith.X25519SharedSecret
     ) { }
 
+    [Symbol.dispose]() {
+      this.inner.free()
+    }
+
     static new(inner: Berith.X25519SharedSecret) {
       return new SharedSecret(inner)
     }
@@ -49,29 +93,5 @@ export function fromBerith(berith: typeof Berith): Adapter {
 
   }
 
-  class StaticSecret {
-
-    constructor(
-      readonly inner: Berith.X25519StaticSecret
-    ) { }
-
-    static new(inner: Berith.X25519StaticSecret) {
-      return new StaticSecret(inner)
-    }
-
-    static tryCreate() {
-      return tryCryptoSync(() => new berith.X25519StaticSecret()).mapSync(StaticSecret.new)
-    }
-
-    tryGetPublicKey() {
-      return tryCryptoSync(() => this.inner.to_public()).mapSync(PublicKey.new)
-    }
-
-    tryComputeDiffieHellman(public_key: PublicKey) {
-      return tryCryptoSync(() => this.inner.diffie_hellman(public_key.inner)).mapSync(SharedSecret.new)
-    }
-
-  }
-
-  return { PublicKey, StaticSecret }
+  return { PublicKey, PrivateKey }
 }

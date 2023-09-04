@@ -1,30 +1,84 @@
-import { Result } from "@hazae41/result"
+import { Cursor, CursorWriteError } from "@hazae41/cursor"
+import { Ok, Result } from "@hazae41/result"
 import { CryptoError } from "libs/crypto/crypto.js"
 import { Promiseable } from "libs/promises/promiseable.js"
+import { fromSafe } from "./safe.js"
 
-export interface PublicKey {
-  tryExport(): Promiseable<Result<Uint8Array, CryptoError>>
+export const global: {
+  value: Adapter
+} = {
+  value: fromSafe()
 }
 
-export interface SharedSecret {
-  tryExport(): Promiseable<Result<Uint8Array, CryptoError>>
+export interface Copiable extends Disposable {
+  readonly bytes: Uint8Array
+
+  copy(): Uint8Array
+
+  trySize(): Result<number, never>
+
+  tryWrite(cursor: Cursor): Result<void, CursorWriteError>
 }
 
-export interface StaticSecret {
+export class Copied implements Copiable {
+
+  /**
+   * A copiable that's already copied
+   * @param bytes 
+   */
+  constructor(
+    readonly bytes: Uint8Array
+  ) { }
+
+  [Symbol.dispose]() { }
+
+  static new(bytes: Uint8Array) {
+    return new Copied(bytes)
+  }
+
+  static from(buffer: ArrayBuffer) {
+    return new Copied(new Uint8Array(buffer))
+  }
+
+  copy() {
+    return this.bytes
+  }
+
+  trySize(): Result<number, never> {
+    return new Ok(this.bytes.length)
+  }
+
+  tryWrite(cursor: Cursor): Result<void, CursorWriteError> {
+    return cursor.tryWrite(this.bytes)
+  }
+
+}
+
+export interface PrivateKey extends Disposable {
   tryGetPublicKey(): Promiseable<Result<PublicKey, CryptoError>>
-  tryComputeDiffieHellman(public_key: PublicKey): Promiseable<Result<SharedSecret, CryptoError>>
+  tryCompute(other: PublicKey): Promiseable<Result<SharedSecret, CryptoError>>
+  tryExport(): Promiseable<Result<Copiable, CryptoError>>
 }
 
-export interface StaticSecretFactory {
-  tryCreate(): Promiseable<Result<StaticSecret, CryptoError>>
+export interface PublicKey extends Disposable {
+  tryExport(): Promiseable<Result<Copiable, CryptoError>>
+}
+
+export interface PrivateKeyFactory {
+  tryRandom(): Promiseable<Result<PrivateKey, CryptoError>>
+  tryImport(bytes: Uint8Array): Promiseable<Result<PrivateKey, CryptoError>>
 }
 
 export interface PublicKeyFactory {
   tryImport(bytes: Uint8Array): Promiseable<Result<PublicKey, CryptoError>>
 }
 
+export interface SharedSecret extends Disposable {
+  tryExport(): Promiseable<Result<Copiable, CryptoError>>
+}
+
 export interface Adapter {
-  StaticSecret: StaticSecretFactory
-  PublicKey: PublicKeyFactory
+  readonly PrivateKey: PrivateKeyFactory
+  readonly PublicKey: PublicKeyFactory
 }
 
