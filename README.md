@@ -28,7 +28,7 @@ const x25519 = X25519.fromBerith(Berith)
 /**
  * Set it globally (optional)
  **/
-Keccak256.set(keccak256)
+X25519.set(x25519)
 ```
 
 ### Noble (JavaScript)
@@ -42,5 +42,5 @@ const x25519 = X25519.fromNoble(noble_ed25519.x25519)
 /**
  * Set it globally (optional)
  **/
-Keccak256.set(keccak256)
+X25519.set(x25519)
 ```
