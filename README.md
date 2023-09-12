@@ -16,31 +16,36 @@ npm i @hazae41/x25519
 
 ## Usage
 
-### Berith (WebAssembly)
+### Safe (WebCrypto)
+
+https://github.com/tQsW/webcrypto-curve25519/blob/master/explainer.md
 
 ```typescript
 import { X25519 } from "@hazae41/x25519"
-import { Berith } from "@hazae41/berith"
 
-await Berith.initBundledOnce()
-const x25519 = X25519.fromBerith(Berith)
+X25519.set(await X25519.fromSafe())
+```
 
-/**
- * Set it globally (optional)
- **/
-X25519.set(x25519)
+### Berith (WebAssembly)
+
+```bash
+npm i @hazae41/berith
+```
+
+```typescript
+import { X25519 } from "@hazae41/x25519"
+
+X25519.set(await X25519.fromSafeOrBerith())
 ```
 
 ### Noble (JavaScript)
 
+```bash
+npm i @noble/curves
+```
+
 ```typescript
 import { X25519 } from "@hazae41/x25519"
-import * as noble_ed25519 from "@noble/curves/ed25519"
 
-const x25519 = X25519.fromNoble(noble_ed25519.x25519)
-
-/**
- * Set it globally (optional)
- **/
-X25519.set(x25519)
+X25519.set(await X25519.fromSafeOrNoble())
 ```

@@ -1,17 +1,17 @@
-import type { Berith } from "@hazae41/berith"
-import { tryCryptoSync } from "libs/crypto/crypto.js"
+import { Berith } from "@hazae41/berith"
+import { Result } from "@hazae41/result"
+import { Adapter } from "./adapter.js"
+import { ComputeError, ConvertError, ExportError, GenerateError, ImportError } from "./errors.js"
 import { fromSafe, isSafeSupported } from "./safe.js"
-import { Adapter } from "./x25519.js"
 
-export async function fromSafeOrBerith(berith: typeof Berith) {
+export async function fromSafeOrBerith() {
   if (await isSafeSupported())
     return fromSafe()
-
-  await berith.initBundledOnce()
-  return fromBerith(berith)
+  return await fromBerith()
 }
 
-export function fromBerith(berith: typeof Berith): Adapter {
+export async function fromBerith(): Promise<Adapter> {
+  await Berith.initBundledOnce()
 
   class PrivateKey {
 
@@ -27,24 +27,34 @@ export function fromBerith(berith: typeof Berith): Adapter {
       return new PrivateKey(inner)
     }
 
-    static tryRandom() {
-      return tryCryptoSync(() => new berith.X25519StaticSecret()).mapSync(PrivateKey.new)
+    static async tryRandom() {
+      return await Result.runAndWrap(() => {
+        return new Berith.X25519StaticSecret()
+      }).then(r => r.mapErrSync(GenerateError.from).mapSync(PrivateKey.new))
     }
 
-    static tryImport(bytes: Uint8Array) {
-      return tryCryptoSync(() => berith.X25519StaticSecret.from_bytes(bytes)).mapSync(PrivateKey.new)
+    static async tryImport(bytes: Uint8Array) {
+      return await Result.runAndWrap(() => {
+        return Berith.X25519StaticSecret.from_bytes(bytes)
+      }).then(r => r.mapErrSync(ImportError.from).mapSync(PrivateKey.new))
     }
 
     tryGetPublicKey() {
-      return tryCryptoSync(() => this.inner.to_public()).mapSync(PublicKey.new)
+      return Result.runAndWrapSync(() => {
+        return this.inner.to_public()
+      }).mapErrSync(ConvertError.from).mapSync(PublicKey.new)
     }
 
-    tryCompute(other: PublicKey) {
-      return tryCryptoSync(() => this.inner.diffie_hellman(other.inner)).mapSync(SharedSecret.new)
+    async tryCompute(other: PublicKey) {
+      return await Result.runAndWrap(() => {
+        return this.inner.diffie_hellman(other.inner)
+      }).then(r => r.mapErrSync(ComputeError.from).mapSync(SharedSecret.new))
     }
 
-    tryExport() {
-      return tryCryptoSync(() => this.inner.to_bytes())
+    async tryExport() {
+      return await Result.runAndWrap(() => {
+        return this.inner.to_bytes()
+      }).then(r => r.mapErrSync(ExportError.from))
     }
 
   }
@@ -63,12 +73,16 @@ export function fromBerith(berith: typeof Berith): Adapter {
       return new PublicKey(inner)
     }
 
-    static tryImport(bytes: Uint8Array) {
-      return tryCryptoSync(() => new berith.X25519PublicKey(bytes)).mapSync(PublicKey.new)
+    static async tryImport(bytes: Uint8Array) {
+      return await Result.runAndWrap(() => {
+        return new Berith.X25519PublicKey(bytes)
+      }).then(r => r.mapErrSync(ImportError.from).mapSync(PublicKey.new))
     }
 
-    tryExport() {
-      return tryCryptoSync(() => this.inner.to_bytes())
+    async tryExport() {
+      return await Result.runAndWrap(() => {
+        return this.inner.to_bytes()
+      }).then(r => r.mapErrSync(ExportError.from))
     }
 
   }
@@ -88,7 +102,9 @@ export function fromBerith(berith: typeof Berith): Adapter {
     }
 
     tryExport() {
-      return tryCryptoSync(() => this.inner.to_bytes())
+      return Result.runAndWrapSync(() => {
+        return this.inner.to_bytes()
+      }).mapErrSync(ExportError.from)
     }
 
   }

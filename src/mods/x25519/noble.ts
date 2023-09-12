@@ -1,16 +1,16 @@
-import { Ok } from "@hazae41/result"
-import type { x25519 } from "@noble/curves/ed25519"
-import { tryCryptoSync } from "libs/crypto/crypto.js"
+import { Ok, Result } from "@hazae41/result"
+import { x25519 } from "@noble/curves/ed25519"
+import { Adapter, Copied } from "./adapter.js"
+import { ComputeError, ConvertError, GenerateError } from "./errors.js"
 import { fromSafe, isSafeSupported } from "./safe.js"
-import { Adapter, Copied } from "./x25519.js"
 
-export async function fromNativeOrNoble(noble: typeof x25519) {
+export async function fromNativeOrNoble() {
   if (await isSafeSupported())
     return fromSafe()
-  return fromNoble(noble)
+  return fromNoble()
 }
 
-export function fromNoble(noble: typeof x25519): Adapter {
+export function fromNoble(): Adapter {
 
   class PrivateKey {
 
@@ -24,23 +24,29 @@ export function fromNoble(noble: typeof x25519): Adapter {
       return new PrivateKey(bytes)
     }
 
-    static tryRandom() {
-      return tryCryptoSync(() => noble.utils.randomPrivateKey()).mapSync(PrivateKey.new)
+    static async tryRandom() {
+      return await Result.runAndWrap(() => {
+        return x25519.utils.randomPrivateKey()
+      }).then(r => r.mapErrSync(GenerateError.from).mapSync(PrivateKey.new))
     }
 
-    static tryImport(bytes: Uint8Array) {
+    static async tryImport(bytes: Uint8Array) {
       return new Ok(new PrivateKey(bytes))
     }
 
     tryGetPublicKey() {
-      return tryCryptoSync(() => noble.getPublicKey(this.bytes)).mapSync(PublicKey.new)
+      return Result.runAndWrapSync(() => {
+        return x25519.getPublicKey(this.bytes)
+      }).mapErrSync(ConvertError.from).mapSync(PublicKey.new)
     }
 
-    tryCompute(other: PublicKey) {
-      return tryCryptoSync(() => noble.getSharedSecret(this.bytes, other.bytes)).mapSync(SharedSecret.new)
+    async tryCompute(other: PublicKey) {
+      return await Result.runAndWrap(() => {
+        return x25519.getSharedSecret(this.bytes, other.bytes)
+      }).then(r => r.mapErrSync(ComputeError.from).mapSync(SharedSecret.new))
     }
 
-    tryExport() {
+    async tryExport() {
       return new Ok(new Copied(this.bytes))
     }
 
@@ -58,11 +64,11 @@ export function fromNoble(noble: typeof x25519): Adapter {
       return new PublicKey(bytes)
     }
 
-    static tryImport(bytes: Uint8Array) {
+    static async tryImport(bytes: Uint8Array) {
       return new Ok(new PublicKey(bytes))
     }
 
-    tryExport() {
+    async tryExport() {
       return new Ok(new Copied(this.bytes))
     }
 
