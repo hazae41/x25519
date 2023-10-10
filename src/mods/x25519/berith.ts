@@ -1,4 +1,5 @@
 import { Berith } from "@hazae41/berith"
+import { Box, Copiable } from "@hazae41/box"
 import { Result } from "@hazae41/result"
 import { Adapter } from "./adapter.js"
 import { ComputeError, ConvertError, ExportError, GenerateError, ImportError } from "./errors.js"
@@ -33,7 +34,7 @@ export async function fromBerith(): Promise<Adapter> {
       }).then(r => r.mapErrSync(GenerateError.from).mapSync(PrivateKey.new))
     }
 
-    static async tryImport(bytes: Uint8Array) {
+    static async tryImport(bytes: Box<Copiable>) {
       return await Result.runAndWrap(() => {
         return Berith.X25519StaticSecret.from_bytes(bytes)
       }).then(r => r.mapErrSync(ImportError.from).mapSync(PrivateKey.new))
@@ -73,7 +74,7 @@ export async function fromBerith(): Promise<Adapter> {
       return new PublicKey(inner)
     }
 
-    static async tryImport(bytes: Uint8Array) {
+    static async tryImport(bytes: Box<Copiable>) {
       return await Result.runAndWrap(() => {
         return new Berith.X25519PublicKey(bytes)
       }).then(r => r.mapErrSync(ImportError.from).mapSync(PublicKey.new))
