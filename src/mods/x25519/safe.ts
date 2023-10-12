@@ -1,4 +1,4 @@
-import { Box, Copiable, Copied } from "@hazae41/box";
+import { BytesOrCopiable, Copied } from "@hazae41/box";
 import { Ok, Result } from "@hazae41/result";
 import { Adapter } from "./adapter.js";
 import { ComputeError, ExportError, GenerateError, ImportError } from "./errors.js";
@@ -10,6 +10,10 @@ export async function isSafeSupported() {
 }
 
 export function fromSafe(): Adapter {
+
+  function getBytes(bytes: BytesOrCopiable) {
+    return "bytes" in bytes ? bytes.bytes : bytes
+  }
 
   class PrivateKey {
 
@@ -33,9 +37,9 @@ export function fromSafe(): Adapter {
       }).then(r => r.mapErrSync(GenerateError.from).mapSync(PrivateKey.from))
     }
 
-    static async tryImport(bytes: Box<Copiable>) {
+    static async tryImport(bytes: BytesOrCopiable) {
       return await Result.runAndWrap(() => {
-        return crypto.subtle.importKey("raw", bytes.get().bytes, "X25519", true, ["deriveKey", "deriveBits"])
+        return crypto.subtle.importKey("raw", getBytes(bytes), "X25519", true, ["deriveKey", "deriveBits"])
       }).then(r => r.mapErrSync(ImportError.from).mapSync(PrivateKey.from))
     }
 
@@ -69,9 +73,9 @@ export function fromSafe(): Adapter {
       return new PublicKey(key)
     }
 
-    static async tryImport(bytes: Box<Copiable>) {
+    static async tryImport(bytes: BytesOrCopiable) {
       return await Result.runAndWrap(() => {
-        return crypto.subtle.importKey("raw", bytes.get().bytes, "X25519", true, ["deriveKey", "deriveBits"])
+        return crypto.subtle.importKey("raw", getBytes(bytes), "X25519", true, ["deriveKey", "deriveBits"])
       }).then(r => r.mapErrSync(ImportError.from).mapSync(PublicKey.new))
     }
 
@@ -86,23 +90,21 @@ export function fromSafe(): Adapter {
   class SharedSecret {
 
     constructor(
-      readonly bytes: Box<Copiable>
+      readonly bytes: Uint8Array
     ) { }
 
-    [Symbol.dispose]() {
-      this.bytes[Symbol.dispose]()
-    }
+    [Symbol.dispose]() { }
 
-    static new(bytes: Box<Copiable>) {
+    static new(bytes: Uint8Array) {
       return new SharedSecret(bytes)
     }
 
     static create(buffer: ArrayBuffer) {
-      return new SharedSecret(new Box(new Copied(new Uint8Array(buffer))))
+      return new SharedSecret(new Uint8Array(buffer))
     }
 
     tryExport() {
-      return new Ok(this.bytes.unwrap())
+      return new Ok(new Copied(this.bytes))
     }
 
   }

@@ -1,5 +1,5 @@
 import { Berith } from "@hazae41/berith"
-import { Box, Copiable } from "@hazae41/box"
+import { Box, BytesOrCopiable } from "@hazae41/box"
 import { Result } from "@hazae41/result"
 import { Adapter } from "./adapter.js"
 import { ComputeError, ConvertError, ExportError, GenerateError, ImportError } from "./errors.js"
@@ -13,6 +13,14 @@ export async function fromSafeOrBerith() {
 
 export async function fromBerith(): Promise<Adapter> {
   await Berith.initBundledOnce()
+
+  function getMemory(bytesOrCopiable: BytesOrCopiable) {
+    if (bytesOrCopiable instanceof Berith.Memory)
+      return Box.greedy(bytesOrCopiable)
+    if (bytesOrCopiable instanceof Uint8Array)
+      return Box.new(new Berith.Memory(bytesOrCopiable))
+    return Box.new(new Berith.Memory(bytesOrCopiable.bytes))
+  }
 
   class PrivateKey {
 
@@ -34,9 +42,11 @@ export async function fromBerith(): Promise<Adapter> {
       }).then(r => r.mapErrSync(GenerateError.from).mapSync(PrivateKey.new))
     }
 
-    static async tryImport(bytes: Box<Copiable>) {
+    static async tryImport(bytes: BytesOrCopiable) {
+      using memory = getMemory(bytes)
+
       return await Result.runAndWrap(() => {
-        return Berith.X25519StaticSecret.from_bytes(bytes)
+        return Berith.X25519StaticSecret.from_bytes(memory.inner)
       }).then(r => r.mapErrSync(ImportError.from).mapSync(PrivateKey.new))
     }
 
@@ -74,9 +84,11 @@ export async function fromBerith(): Promise<Adapter> {
       return new PublicKey(inner)
     }
 
-    static async tryImport(bytes: Box<Copiable>) {
+    static async tryImport(bytes: BytesOrCopiable) {
+      using memory = getMemory(bytes)
+
       return await Result.runAndWrap(() => {
-        return new Berith.X25519PublicKey(bytes)
+        return new Berith.X25519PublicKey(memory.inner)
       }).then(r => r.mapErrSync(ImportError.from).mapSync(PublicKey.new))
     }
 

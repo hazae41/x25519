@@ -1,4 +1,4 @@
-import { Box, Copiable } from "@hazae41/box"
+import { BytesOrCopiable, Copiable } from "@hazae41/box"
 import { None, Option } from "@hazae41/option"
 import { Result } from "@hazae41/result"
 import { ComputeError, ConvertError, ExportError, GenerateError, ImportError } from "./errors.js"
@@ -30,11 +30,11 @@ export interface SharedSecret extends Disposable {
 
 export interface PrivateKeyFactory {
   tryRandom(): Promise<Result<PrivateKey, GenerateError>>
-  tryImport(bytes: Box<Copiable>): Promise<Result<PrivateKey, ImportError>>
+  tryImport(bytes: BytesOrCopiable): Promise<Result<PrivateKey, ImportError>>
 }
 
 export interface PublicKeyFactory {
-  tryImport(bytes: Box<Copiable>): Promise<Result<PublicKey, ImportError>>
+  tryImport(bytes: BytesOrCopiable): Promise<Result<PublicKey, ImportError>>
 }
 
 export interface Adapter {
