@@ -1,17 +1,19 @@
-import { BytesOrCopiable, Copied } from "@hazae41/box"
-import { Ok, Result } from "@hazae41/result"
-import { x25519 } from "@noble/curves/ed25519"
+import type { x25519 } from "@noble/curves/ed25519"
+import { BytesOrCopiable, Copied } from "libs/copiable/index.js"
 import { Adapter } from "./adapter.js"
-import { ComputeError, ConvertError, GenerateError } from "./errors.js"
-import { fromSafe, isSafeSupported } from "./safe.js"
+import { fromNative, isNativeSupported } from "./native.js"
 
-export async function fromNativeOrNoble() {
-  if (await isSafeSupported())
-    return fromSafe()
-  return fromNoble()
+export async function fromNativeOrNoble(noble: typeof x25519) {
+  const native = await isNativeSupported()
+
+  if (!native)
+    return fromNoble(noble)
+
+  return fromNative()
 }
 
-export function fromNoble(): Adapter {
+export function fromNoble(noble: typeof x25519) {
+  const { utils, getPublicKey, getSharedSecret } = noble
 
   function getBytes(bytes: BytesOrCopiable) {
     return "bytes" in bytes ? bytes.bytes : bytes
@@ -25,34 +27,28 @@ export function fromNoble(): Adapter {
 
     [Symbol.dispose]() { }
 
-    static new(bytes: Uint8Array) {
+    static create(bytes: Uint8Array) {
       return new PrivateKey(bytes)
     }
 
-    static async tryRandom() {
-      return await Result.runAndWrap(() => {
-        return x25519.utils.randomPrivateKey()
-      }).then(r => r.mapErrSync(GenerateError.from).mapSync(PrivateKey.new))
+    static async randomOrThrow() {
+      return new PrivateKey(utils.randomPrivateKey())
     }
 
-    static async tryImport(bytes: BytesOrCopiable) {
-      return new Ok(new PrivateKey(getBytes(bytes).slice()))
+    static async importOrThrow(bytes: BytesOrCopiable) {
+      return new PrivateKey(getBytes(bytes).slice())
     }
 
-    tryGetPublicKey() {
-      return Result.runAndWrapSync(() => {
-        return x25519.getPublicKey(this.bytes)
-      }).mapErrSync(ConvertError.from).mapSync(PublicKey.new)
+    getPublicKeyOrThrow() {
+      return new PublicKey(getPublicKey(this.bytes))
     }
 
-    async tryCompute(other: PublicKey) {
-      return await Result.runAndWrap(() => {
-        return x25519.getSharedSecret(this.bytes, other.bytes)
-      }).then(r => r.mapErrSync(ComputeError.from).mapSync(SharedSecret.new))
+    async computeOrThrow(other: PublicKey) {
+      return new SharedSecret(getSharedSecret(this.bytes, other.bytes))
     }
 
-    async tryExport() {
-      return new Ok(new Copied(this.bytes))
+    async exportOrThrow() {
+      return new Copied(this.bytes)
     }
 
   }
@@ -65,16 +61,16 @@ export function fromNoble(): Adapter {
 
     [Symbol.dispose]() { }
 
-    static new(bytes: Uint8Array) {
+    static create(bytes: Uint8Array) {
       return new PublicKey(bytes)
     }
 
-    static async tryImport(bytes: BytesOrCopiable) {
-      return new Ok(new PublicKey(getBytes(bytes).slice()))
+    static async importOrThrow(bytes: BytesOrCopiable) {
+      return new PublicKey(getBytes(bytes).slice())
     }
 
-    async tryExport() {
-      return new Ok(new Copied(this.bytes))
+    async exportOrThrow() {
+      return new Copied(this.bytes)
     }
 
   }
@@ -87,15 +83,15 @@ export function fromNoble(): Adapter {
 
     [Symbol.dispose]() { }
 
-    static new(bytes: Uint8Array) {
+    static create(bytes: Uint8Array) {
       return new SharedSecret(bytes)
     }
 
-    tryExport() {
-      return new Ok(new Copied(this.bytes))
+    exportOrThrow() {
+      return new Copied(this.bytes)
     }
 
   }
 
-  return { PublicKey, PrivateKey }
+  return { PublicKey, PrivateKey } satisfies Adapter
 }
