@@ -1,12 +1,10 @@
-import { BytesOrCopiable, Copiable } from "@hazae41/box"
 import { None, Option } from "@hazae41/option"
-import { Result } from "@hazae41/result"
-import { ComputeError, ConvertError, ExportError, GenerateError, ImportError } from "./errors.js"
+import { BytesOrCopiable, Copiable } from "libs/copiable/index.js"
 
 let global: Option<Adapter> = new None()
 
 export function get() {
-  return global.unwrap()
+  return global
 }
 
 export function set(value?: Adapter) {
@@ -14,27 +12,29 @@ export function set(value?: Adapter) {
 }
 
 export interface PrivateKey extends Disposable {
-  tryGetPublicKey(): Result<PublicKey, ConvertError>
+  getPublicKeyOrThrow(): PublicKey
 
-  tryCompute(other: PublicKey): Promise<Result<SharedSecret, ComputeError>>
-  tryExport(): Promise<Result<Copiable, ExportError>>
+  computeOrThrow(other: PublicKey): Promise<SharedSecret>
+
+  exportOrThrow(): Promise<Copiable>
 }
 
 export interface PublicKey extends Disposable {
-  tryExport(): Promise<Result<Copiable, ExportError>>
+  exportOrThrow(): Promise<Copiable>
 }
 
 export interface SharedSecret extends Disposable {
-  tryExport(): Result<Copiable, ExportError>
+  exportOrThrow(): Copiable
 }
 
 export interface PrivateKeyFactory {
-  tryRandom(): Promise<Result<PrivateKey, GenerateError>>
-  tryImport(bytes: BytesOrCopiable): Promise<Result<PrivateKey, ImportError>>
+  randomOrThrow(): Promise<PrivateKey>
+
+  importOrThrow(bytes: BytesOrCopiable): Promise<PrivateKey>
 }
 
 export interface PublicKeyFactory {
-  tryImport(bytes: BytesOrCopiable): Promise<Result<PublicKey, ImportError>>
+  importOrThrow(bytes: BytesOrCopiable): Promise<PublicKey>
 }
 
 export interface Adapter {
