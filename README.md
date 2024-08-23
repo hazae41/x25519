@@ -16,26 +16,27 @@ npm i @hazae41/x25519
 
 ## Usage
 
-### Safe (WebCrypto)
+### Native (WebCrypto)
 
 https://github.com/tQsW/webcrypto-curve25519/blob/master/explainer.md
 
 ```typescript
 import { X25519 } from "@hazae41/x25519"
 
-X25519.set(await X25519.fromSafe())
+X25519.set(await X25519.fromNative())
 ```
 
-### Berith (WebAssembly)
+### WebAssembly
 
 ```bash
-npm i @hazae41/berith
+npm i @hazae41/x25519.wasm
 ```
 
 ```typescript
 import { X25519 } from "@hazae41/x25519"
+import { X25519Wasm } from "@hazae41/x25519.wasm"
 
-X25519.set(await X25519.fromSafeOrBerith())
+X25519.set(await X25519.fromNativeOrWasm(X25519Wasm))
 ```
 
 ### Noble (JavaScript)
@@ -46,6 +47,7 @@ npm i @noble/curves
 
 ```typescript
 import { X25519 } from "@hazae41/x25519"
+import { x25519 } from "@noble/curves/ed25519"
 
-X25519.set(await X25519.fromSafeOrNoble())
+X25519.set(await X25519.fromNativeOrNoble(x25519))
 ```
