@@ -49,7 +49,7 @@ npm i @noble/curves
 
 ```typescript
 import { X25519 } from "@hazae41/x25519"
-import { x25519 } from "@noble/curves/ed25519"
+import * as Ed25519Noble from "@noble/curves/ed25519"
 
-X25519.set(await X25519.fromNativeOrNoble(x25519))
+X25519.set(await X25519.fromNativeOrNoble(Ed25519Noble))
 ```

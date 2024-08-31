@@ -1,9 +1,9 @@
-import type { x25519 } from "@noble/curves/ed25519"
+import type * as Ed25519Noble from "@noble/curves/ed25519"
 import { BytesOrCopiable, Copied } from "libs/copiable/index.js"
 import { Adapter } from "./adapter.js"
 import { fromNative, isNativeSupported } from "./native.js"
 
-export async function fromNativeOrNoble(noble: typeof x25519) {
+export async function fromNativeOrNoble(noble: typeof Ed25519Noble) {
   const native = await isNativeSupported()
 
   if (!native)
@@ -12,8 +12,8 @@ export async function fromNativeOrNoble(noble: typeof x25519) {
   return fromNative()
 }
 
-export function fromNoble(noble: typeof x25519) {
-  const { utils, getPublicKey, getSharedSecret } = noble
+export function fromNoble(noble: typeof Ed25519Noble) {
+  const { x25519 } = noble
 
   function getBytes(bytes: BytesOrCopiable) {
     return "bytes" in bytes ? bytes.bytes : bytes
@@ -32,7 +32,7 @@ export function fromNoble(noble: typeof x25519) {
     }
 
     static async randomOrThrow() {
-      return new PrivateKey(utils.randomPrivateKey())
+      return new PrivateKey(x25519.utils.randomPrivateKey())
     }
 
     static async importOrThrow(bytes: BytesOrCopiable) {
@@ -40,11 +40,11 @@ export function fromNoble(noble: typeof x25519) {
     }
 
     getPublicKeyOrThrow() {
-      return new PublicKey(getPublicKey(this.bytes))
+      return new PublicKey(x25519.getPublicKey(this.bytes))
     }
 
     async computeOrThrow(other: PublicKey) {
-      return new SharedSecret(getSharedSecret(this.bytes, other.bytes))
+      return new SharedSecret(x25519.getSharedSecret(this.bytes, other.bytes))
     }
 
     async exportOrThrow() {
