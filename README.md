@@ -36,6 +36,8 @@ npm i @hazae41/x25519.wasm
 import { X25519 } from "@hazae41/x25519"
 import { X25519Wasm } from "@hazae41/x25519.wasm"
 
+await X25519Wasm.initBundled()
+
 X25519.set(await X25519.fromNativeOrWasm(X25519Wasm))
 ```
 

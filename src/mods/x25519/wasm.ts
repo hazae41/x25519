@@ -8,15 +8,13 @@ export async function fromSafeOrBerith(wasm: typeof X25519Wasm) {
   const native = await isNativeSupported()
 
   if (!native)
-    return await fromWasm(wasm)
+    return fromWasm(wasm)
 
   return fromNative()
 }
 
-export async function fromWasm(wasm: typeof X25519Wasm) {
-  const { initBundled, Memory, X25519StaticSecret, X25519PublicKey } = wasm
-
-  await initBundled()
+export function fromWasm(wasm: typeof X25519Wasm) {
+  const { Memory, X25519StaticSecret, X25519PublicKey } = wasm
 
   function getMemory(bytesOrCopiable: BytesOrCopiable) {
     if (bytesOrCopiable instanceof Memory)
