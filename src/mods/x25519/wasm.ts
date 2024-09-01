@@ -4,7 +4,7 @@ import { BytesOrCopiable } from "libs/copiable/index.js"
 import { Adapter } from "./adapter.js"
 import { fromNative, isNativeSupported } from "./native.js"
 
-export async function fromSafeOrBerith(wasm: typeof X25519Wasm) {
+export async function fromNativeOrWasm(wasm: typeof X25519Wasm) {
   const native = await isNativeSupported()
 
   if (!native)
