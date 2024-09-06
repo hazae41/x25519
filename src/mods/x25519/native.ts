@@ -62,7 +62,7 @@ export function fromNative() {
     }
 
     static async importOrThrow(bytes: BytesOrCopiable) {
-      return new PublicKey(await crypto.subtle.importKey("raw", getBytes(bytes), "X25519", true, ["deriveKey", "deriveBits"]))
+      return new PublicKey(await crypto.subtle.importKey("raw", getBytes(bytes), { name: "X25519" }, true, ["deriveKey", "deriveBits"]))
     }
 
     async exportOrThrow() {
