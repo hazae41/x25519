@@ -4,7 +4,7 @@ import { Adapter } from "./adapter.js";
 
 export async function isNativeSupported() {
   return await Result.runAndWrap(async () => {
-    return await crypto.subtle.generateKey("X25519", false, ["deriveKey", "deriveBits"])
+    return await crypto.subtle.generateKey({ name: "X25519" }, false, ["deriveKey", "deriveBits"])
   }).then(r => r.isOk())
 }
 
@@ -36,11 +36,7 @@ export function fromNative() {
     }
 
     static async randomOrThrow() {
-      return new PrivateKey(await crypto.subtle.generateKey("X25519", true, ["deriveKey", "deriveBits"]) as CryptoKeyPair)
-    }
-
-    static async importOrThrow(bytes: BytesOrCopiable) {
-      return new PrivateKey(await crypto.subtle.importKey("raw", getBytes(bytes), "X25519", true, ["deriveKey", "deriveBits"]) as unknown as CryptoKeyPair)
+      return new PrivateKey(await crypto.subtle.generateKey({ name: "X25519" }, true, ["deriveKey", "deriveBits"]) as CryptoKeyPair)
     }
 
     getPublicKeyOrThrow() {
@@ -49,10 +45,6 @@ export function fromNative() {
 
     async computeOrThrow(publicKey: PublicKey) {
       return new SharedSecret(new Uint8Array(await crypto.subtle.deriveBits({ name: "X25519", public: publicKey.key }, this.key.privateKey, 256)))
-    }
-
-    async exportOrThrow() {
-      return new Copied(new Uint8Array(await crypto.subtle.exportKey("raw", this.key.privateKey)))
     }
 
   }

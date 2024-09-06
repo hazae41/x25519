@@ -15,8 +15,6 @@ export interface PrivateKey extends Disposable {
   getPublicKeyOrThrow(): PublicKey
 
   computeOrThrow(other: PublicKey): Promise<SharedSecret>
-
-  exportOrThrow(): Promise<Copiable>
 }
 
 export interface PublicKey extends Disposable {
@@ -29,8 +27,6 @@ export interface SharedSecret extends Disposable {
 
 export interface PrivateKeyFactory {
   randomOrThrow(): Promise<PrivateKey>
-
-  importOrThrow(bytes: BytesOrCopiable): Promise<PrivateKey>
 }
 
 export interface PublicKeyFactory {
