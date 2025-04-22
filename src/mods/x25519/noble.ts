@@ -1,5 +1,6 @@
 import type * as Ed25519Noble from "@noble/curves/ed25519"
 import { BytesOrCopiable, Copied } from "libs/copiable/index.js"
+import * as Abstract from "./abstract.js"
 import { Adapter } from "./adapter.js"
 import { fromNative, isNativeSupported } from "./native.js"
 
@@ -19,11 +20,13 @@ export function fromNoble(noble: typeof Ed25519Noble) {
     return "bytes" in bytes ? bytes.bytes : bytes
   }
 
-  class PrivateKey {
+  class PrivateKey extends Abstract.PrivateKey {
 
     constructor(
       readonly bytes: Uint8Array
-    ) { }
+    ) {
+      super()
+    }
 
     [Symbol.dispose]() { }
 
@@ -53,11 +56,13 @@ export function fromNoble(noble: typeof Ed25519Noble) {
 
   }
 
-  class PublicKey {
+  class PublicKey extends Abstract.PublicKey {
 
     constructor(
       readonly bytes: Uint8Array
-    ) { }
+    ) {
+      super()
+    }
 
     [Symbol.dispose]() { }
 
@@ -75,11 +80,13 @@ export function fromNoble(noble: typeof Ed25519Noble) {
 
   }
 
-  class SharedSecret {
+  class SharedSecret extends Abstract.SharedSecret {
 
     constructor(
       readonly bytes: Uint8Array
-    ) { }
+    ) {
+      super()
+    }
 
     [Symbol.dispose]() { }
 

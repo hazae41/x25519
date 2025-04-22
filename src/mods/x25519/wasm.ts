@@ -1,6 +1,7 @@
 import { Box } from "@hazae41/box"
 import type { X25519PublicKey, X25519SharedSecret, X25519StaticSecret, X25519Wasm } from "@hazae41/x25519.wasm"
 import { BytesOrCopiable } from "libs/copiable/index.js"
+import * as Abstract from "./abstract.js"
 import { Adapter } from "./adapter.js"
 import { fromNative, isNativeSupported } from "./native.js"
 
@@ -18,17 +19,19 @@ export function fromWasm(wasm: typeof X25519Wasm) {
 
   function getMemory(bytesOrCopiable: BytesOrCopiable) {
     if (bytesOrCopiable instanceof Memory)
-      return Box.createAsMoved(bytesOrCopiable)
+      return Box.createAsDropped(bytesOrCopiable)
     if (bytesOrCopiable instanceof Uint8Array)
       return Box.create(new Memory(bytesOrCopiable))
     return Box.create(new Memory(bytesOrCopiable.bytes))
   }
 
-  class PrivateKey {
+  class PrivateKey extends Abstract.PrivateKey {
 
     constructor(
       readonly inner: X25519StaticSecret
-    ) { }
+    ) {
+      super()
+    }
 
     [Symbol.dispose]() {
       using _ = this.inner
@@ -45,7 +48,7 @@ export function fromWasm(wasm: typeof X25519Wasm) {
     static async importOrThrow(bytes: BytesOrCopiable) {
       using memory = getMemory(bytes)
 
-      return new PrivateKey(X25519StaticSecret.from_bytes(memory.inner))
+      return new PrivateKey(X25519StaticSecret.from_bytes(memory.value))
     }
 
     getPublicKeyOrThrow() {
@@ -62,11 +65,13 @@ export function fromWasm(wasm: typeof X25519Wasm) {
 
   }
 
-  class PublicKey {
+  class PublicKey extends Abstract.PublicKey {
 
     constructor(
       readonly inner: X25519PublicKey
-    ) { }
+    ) {
+      super()
+    }
 
     [Symbol.dispose]() {
       using _ = this.inner
@@ -79,7 +84,7 @@ export function fromWasm(wasm: typeof X25519Wasm) {
     static async importOrThrow(bytes: BytesOrCopiable) {
       using memory = getMemory(bytes)
 
-      return new PublicKey(new X25519PublicKey(memory.inner))
+      return new PublicKey(new X25519PublicKey(memory.value))
     }
 
     async exportOrThrow() {
@@ -88,11 +93,13 @@ export function fromWasm(wasm: typeof X25519Wasm) {
 
   }
 
-  class SharedSecret {
+  class SharedSecret extends Abstract.SharedSecret {
 
     constructor(
       readonly inner: X25519SharedSecret
-    ) { }
+    ) {
+      super()
+    }
 
     [Symbol.dispose]() {
       using _ = this.inner
