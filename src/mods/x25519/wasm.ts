@@ -1,4 +1,4 @@
-import { Box } from "@hazae41/box"
+import { Pin, Ref } from "@hazae41/box"
 import type { X25519PublicKey, X25519SharedSecret, X25519StaticSecret, X25519Wasm } from "@hazae41/x25519.wasm"
 import { BytesOrCopiable } from "libs/copiable/index.js"
 import * as Abstract from "./abstract.js"
@@ -19,10 +19,12 @@ export function fromWasm(wasm: typeof X25519Wasm) {
 
   function getMemory(bytesOrCopiable: BytesOrCopiable) {
     if (bytesOrCopiable instanceof Memory)
-      return Box.createAsDropped(bytesOrCopiable)
+      return new Ref(bytesOrCopiable)
+
     if (bytesOrCopiable instanceof Uint8Array)
-      return Box.create(new Memory(bytesOrCopiable))
-    return Box.create(new Memory(bytesOrCopiable.bytes))
+      return Pin.from(new Memory(bytesOrCopiable))
+
+    return Pin.from(new Memory(bytesOrCopiable.bytes))
   }
 
   class PrivateKey extends Abstract.PrivateKey {
