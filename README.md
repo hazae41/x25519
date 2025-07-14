@@ -1,4 +1,4 @@
-# X25519
+# X25519 (deprecated: use WebCrypto)
 
 X25519 adapter for WebAssembly and JS implementations
 
